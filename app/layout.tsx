@@ -3,8 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Midia Dashboard",
-  description: "Sistema de gerenciamento - Midia Dashboard",
+  title: "Finance Util",
+  description: "Sistema de gerenciamento - Finance Util",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon-192.png",
