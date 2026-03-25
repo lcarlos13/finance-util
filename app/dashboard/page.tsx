@@ -16,14 +16,17 @@ export default function Dashboard() {
 
   async function carregarImagem() {
     try {
-      const res = await fetch(`${window.location.origin}/api/imagem`);
-      const data = await res.json();
+        const res = await fetch(
+        `${window.location.origin}/api/imagem?ts=${Date.now()}`
+        );
 
-      if (data.imagem) {
+        const data = await res.json();
+
+        if (data.imagem) {
         setImagem(`data:image/jpeg;base64,${data.imagem}`);
-      }
+        }
     } catch (err) {
-      console.error("Erro ao carregar imagem", err);
+        console.error("Erro ao carregar imagem", err);
     }
   }
 
