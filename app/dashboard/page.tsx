@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [imagem, setImagem] = useState<string | null>(null);
   const [dados, setDados] = useState<DadosBoleto | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mensagem, setMensagem] = useState<string | null>(null);
 
   async function carregarImagem() {
   try {
@@ -136,14 +137,18 @@ async function inserirNaPlanilha() {
 
     const data = await res.json();
 
-    console.log("Salvo em:", data.range);
+     if (data.ok) {
+      // ✅ mensagem de sucesso
+      setMensagem("Inserido com sucesso!");
 
-    // 🔥 limpa tudo (como você queria)
-    setDados(null);
-    setImagem(null);
+      // 🧹 limpa tudo
+      setDados(null);
+      setImagem(null);
+    }
 
   } catch (err) {
     console.error("Erro ao salvar", err);
+    setMensagem("Erro ao inserir na planilha");
   }
 }
 
@@ -274,7 +279,7 @@ async function inserirNaPlanilha() {
             >
             <option value="">SELECIONE O TIPO DO BOLETO</option>
             <option value="SECOS">SECOS</option>
-            <option value="PROTEINAS">PROTEÍNAS</option>
+            <option value="PROTEÍNAS">PROTEÍNAS</option>
             <option value="BEBIDAS">BEBIDAS</option>
            </select>
 
@@ -286,6 +291,17 @@ async function inserirNaPlanilha() {
             </button>
         </div>
       )}
+      {mensagem && (
+        <div className="mt-4 p-3 bg-green-100 text-green-800 rounded">
+            {mensagem}
+            <button
+            onClick={() => setMensagem(null)}
+            className="block mt-2 text-sm underline"
+            >
+            OK
+            </button>
+        </div>
+       )}
     </main>
   );
 }
