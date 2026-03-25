@@ -4,4 +4,16 @@ const nextConfig: NextConfig = {
   /* config options here */
 };
 
+const withPWA = require("next-pwa")({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
+});
+
+module.exports = withPWA({
+  reactStrictMode: true,
+  turbopack: {}, // <- isso silencia o erro
+});
+
 export default nextConfig;
