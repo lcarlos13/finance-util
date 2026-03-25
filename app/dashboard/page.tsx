@@ -28,9 +28,8 @@ export default function Dashboard() {
       const novaImagem = `data:image/jpeg;base64,${data.imagem}`;
 
       // 🔥 só atualiza se mudou (evita reset desnecessário)
-      if (novaImagem !== imagem) {
+      if (!dados && novaImagem !== imagem) {
         setImagem(novaImagem);
-        setDados(null); // 👈 limpa os dados antigos
       }
     }
   } catch (err) {
