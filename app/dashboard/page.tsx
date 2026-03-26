@@ -9,6 +9,8 @@ type DadosBoleto = {
   valor: number;
   vencimento: string | null;
   tipo: string;
+  numeroDocumento: string;
+  dataDocumento: string;
 };
 
 export default function Dashboard() {
@@ -152,6 +154,123 @@ async function inserirNaPlanilha() {
   }
 }
 
+function normalizarTexto(texto: string) {
+  return texto
+    .replace(/\r/g, "")
+    .replace(/\t/g, " ")
+    .replace(/[|]/g, "I")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function formatarData(match: RegExpMatchArray) {
+  const dia = match[1];
+  const mes = match[2];
+  const ano = match[3];
+
+  return `${dia}/${mes}/${ano}`;
+}
+
+function pareceData(texto: string) {
+  return /\d{2}[\/\.\-]\d{2}[\/\.\-]\d{2,4}/.test(texto);
+}
+
+function pareceNumeroDocumento(texto: string) {
+  return (
+    /\d{3,}/.test(texto) && // tem números relevantes
+    !texto.includes("CNPJ") &&
+    !texto.includes("CPF") &&
+    !pareceData(texto) &&
+    texto.length < 25 // evita linhas gigantes
+  );
+}
+
+function escolherMelhorNF(candidatos: string[]) {
+  // prioridade:
+  // 1. formato com barra (16321/1)
+  const comBarra = candidatos.find(c => c.includes("/"));
+  if (comBarra) return comBarra;
+
+  // 2. menor string numérica limpa
+  const ordenado = candidatos.sort((a, b) => a.length - b.length);
+  return ordenado[0];
+}
+
+function normalizarData(texto: string) {
+  const match = texto.match(/(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{2,4})/);
+  if (!match) return "";
+
+  let dia = match[1];
+  let mes = match[2];
+  let ano = match[3];
+
+  if (ano.length === 2) {
+    ano = "20" + ano;
+  }
+
+  return `${dia}/${mes}/${ano}`;
+}
+
+
+function extrairDataDocumento(texto: string) {
+  const linhas = texto.split("\n").map(l => l.trim());
+
+  const regexData = /\d{2}[\/\.\-]\d{2}[\/\.\-]\d{2,4}/;
+
+  for (let i = 0; i < linhas.length; i++) {
+    const linha = linhas[i].toUpperCase();
+
+    if (linha.includes("DATA") && linha.includes("DOCUMENTO")) {
+      // 🔍 procura nas próximas linhas
+      for (let j = 1; j <= 10; j++) {
+        const alvo = linhas[i + j];
+        if (!alvo) break;
+
+        if (regexData.test(alvo)) {
+            return alvo;
+            //return normalizarData(alvo);
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
+
+function extrairNumeroDocumento(texto: string) {
+  const linhas = texto.split("\n").map(l => l.trim());
+
+  for (let i = 0; i < linhas.length; i++) {
+    const linha = linhas[i].toUpperCase();
+
+    if (linha.includes("NUM") && linha.includes("DOCUMENTO") ||
+         linha.includes("Nº") && linha.includes("DOCUMENTO") ||
+         linha.includes("N") && linha.includes("DOCUMENTO")) {
+      // 🔍 janela abaixo
+      for (let j = 1; j <= 10; j++) {
+        const alvo = linhas[i + j];
+        if (!alvo) break;
+
+        // 🚫 ignora lixo
+        if (
+          alvo.includes("CNPJ") ||
+          alvo.includes("DATA") ||
+          alvo.length > 30 ||
+          alvo.length == 10
+        ) continue;
+
+        if (/\d{3,}/.test(alvo)) {
+          return alvo.trim();
+        }
+      }
+    }
+  }
+
+  return "Não identificado";
+}
+
+
   async function extrairBoleto() {
     if (!imagem) return;
 
@@ -180,8 +299,10 @@ async function inserirNaPlanilha() {
         );
 
         if (!linhaMatch) {
-        setLoading(false);
-        return;
+            setLoading(false);
+            console.log("Linha nao capturada");
+            setMensagem("Erro ao ler o boleto, tente novamente com outra foto");
+            return;
         }
 
         const linhaDigitavel = linhaMatch[0].replace(/\D/g, "");
@@ -202,12 +323,20 @@ async function inserirNaPlanilha() {
         ? resultado.vencimento.split("-").reverse().join("/")
         : "";
 
+        const numeroDocumento = extrairNumeroDocumento(texto);
+        const dataDocumento = extrairDataDocumento(texto);
+
+        console.log("NF:", numeroDocumento);
+        console.log("Data Documento:", dataDocumento);
+
         // ✅ set dados
         setDados({
-        beneficiario,
-        valor: resultado.valor,
-        vencimento: vencimentoFormatado,
-        tipo: "",
+            beneficiario,
+            valor: resultado.valor,
+            vencimento: vencimentoFormatado,
+            tipo: "",
+            numeroDocumento,
+            dataDocumento,
         });
 
     } catch (err) {
@@ -267,6 +396,21 @@ async function inserirNaPlanilha() {
             value={dados.vencimento || ""}
             onChange={(e) =>
               setDados({ ...dados, vencimento: e.target.value })
+            }
+            className="border p-2 w-full"
+          />
+          <input
+            value={dados.numeroDocumento}
+            onChange={(e) =>
+                setDados({ ...dados, numeroDocumento: e.target.value })
+            }
+            className="border p-2 w-full"
+            />
+
+          <input
+            value={dados.dataDocumento}
+            onChange={(e) =>
+                setDados({ ...dados, dataDocumento: e.target.value })
             }
             className="border p-2 w-full"
           />

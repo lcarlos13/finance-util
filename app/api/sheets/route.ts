@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { beneficiario, valor, vencimento, tipo } = body;
+    const { beneficiario, valor, vencimento, tipo, numeroDocumento, dataDocumento } = body;
 
     const auth = new google.auth.GoogleAuth({
       credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON!),
@@ -24,9 +24,9 @@ export async function POST(req: Request) {
           "",
           "",
           "",
-          "",
+          numeroDocumento,
           valor,
-          "",
+          dataDocumento,
           vencimento
         ]],
       },
