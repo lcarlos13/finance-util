@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [dados, setDados] = useState<DadosBoleto | null>(null);
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
+  const [arquivo, setArquivo] = useState<File | null>(null);
 
   async function carregarImagem() {
   try {
@@ -272,19 +273,21 @@ function extrairNumeroDocumento(texto: string) {
 
 
   async function extrairBoleto() {
-  if (!imagem) return;
+  if (!arquivo) {
+    setMensagem("Selecione uma imagem primeiro");
+    return;
+  }
 
   setLoading(true);
 
   try {
+
+    const formData = new FormData();
+    formData.append("file", arquivo);
+
     const res = await fetch("/api/ocr", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        imagem: imagem.split(",")[1],
-      }),
+       body: formData,
     });
 
     const data = await res.json();
@@ -314,11 +317,12 @@ function extrairNumeroDocumento(texto: string) {
     setLoading(false);
   }
 }
-
+  /*
   useEffect(() => {
     const interval = setInterval(carregarImagem, 2000);
     return () => clearInterval(interval);
   }, []);
+  */
 
   useEffect(() => {
   if (imagem) {
@@ -329,7 +333,25 @@ function extrairNumeroDocumento(texto: string) {
   return (
     <main className="p-6">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <input
+        type="file"
+        accept="image/*"
+        className="mb-4"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
 
+          // 🔥 guarda o arquivo real
+          setArquivo(file);
+
+          // 🔥 gera preview (continua usando sua lógica atual)
+          const reader = new FileReader();
+          reader.onload = () => {
+            setImagem(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+        }}
+      />
       {imagem ? (
         <img src={imagem} className="max-w-md border" />
       ) : (

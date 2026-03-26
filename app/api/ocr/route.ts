@@ -155,12 +155,17 @@ function extrairNumeroDocumento(texto: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { imagem } = await req.json();
-    //const filePath = path.join(process.cwd(), "tmp", "imagem.jpg");
-    //const filePath = "/tmp/imagem.jpg";
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+
+    if (!file) {
+      return NextResponse.json({ erro: "Sem arquivo" }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
 
     const [result] = await client.textDetection({
-      image: { content: imagem },
+      image: { content: buffer },
     });
 
     const texto = result.fullTextAnnotation?.text || "";
