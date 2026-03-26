@@ -26,8 +26,9 @@ export async function POST(req: NextRequest) {
     });
 
     const texto = result.fullTextAnnotation?.text || "";
+    const texto_reduzido = texto.split("\n").slice(0, 200).join("\n");
 
-    return NextResponse.json({ texto });
+    return NextResponse.json({ texto_reduzido });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ erro: "Erro no OCR" }, { status: 500 });
