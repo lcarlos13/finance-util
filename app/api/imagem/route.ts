@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), "tmp", "imagem.jpg");
+  //const filePath = path.join(process.cwd(), "tmp", "imagem.jpg");
+  const filePath = "/tmp/imagem.jpg";
 
   if (!fs.existsSync(filePath)) {
     return Response.json({ imagem: null });

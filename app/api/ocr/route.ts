@@ -12,7 +12,8 @@ const client = new vision.ImageAnnotatorClient({
 export async function POST(req: NextRequest) {
   try {
     //const { imagem } = await req.json();
-    const filePath = path.join(process.cwd(), "tmp", "imagem.jpg");
+    //const filePath = path.join(process.cwd(), "tmp", "imagem.jpg");
+    const filePath = "/tmp/imagem.jpg";
 
     if (!fs.existsSync(filePath)) {
       return Response.json({ erro: "Imagem não encontrada" }, { status: 404 });

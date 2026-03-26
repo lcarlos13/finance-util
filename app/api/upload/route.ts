@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   // salvar temporariamente (memória simples)
   //globalThis.ultimaImagem = buffer.toString("base64");
 
-  const dir = path.join(process.cwd(), "tmp");
+  const dir = "/tmp";
 
   // cria pasta se não existir
   if (!fs.existsSync(dir)) {
