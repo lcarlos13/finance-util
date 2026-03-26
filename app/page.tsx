@@ -338,18 +338,50 @@ function extrairNumeroDocumento(texto: string) {
             accept="image/*"
             capture="environment"
             className="mb-4"
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
 
-              // 🔥 guarda o arquivo real
-              setArquivo(file);
-
-              // 🔥 gera preview (continua usando sua lógica atual)
+              // 🔥 reduzir imagem
+              const img = new Image();
               const reader = new FileReader();
+
               reader.onload = () => {
-                setImagem(reader.result as string);
+                img.src = reader.result as string;
               };
+
+              img.onload = () => {
+                const canvas = document.createElement("canvas");
+
+                const MAX_WIDTH = 1200; // 🔥 controla tamanho
+                const scale = MAX_WIDTH / img.width;
+
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scale;
+
+                const ctx = canvas.getContext("2d");
+                ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // 🔥 reduz qualidade
+                canvas.toBlob((blob) => {
+                  if (!blob) return;
+
+                  const compressedFile = new File([blob], "boleto.jpg", {
+                    type: "image/jpeg",
+                  });
+
+                  setArquivo(compressedFile);
+
+                  // preview
+                  const previewReader = new FileReader();
+                  previewReader.onload = () => {
+                    setImagem(previewReader.result as string);
+                  };
+                  previewReader.readAsDataURL(compressedFile);
+
+                }, "image/jpeg", 0.7); // 🔥 qualidade (0.7 = ideal)
+              };
+
               reader.readAsDataURL(file);
             }}
           />
