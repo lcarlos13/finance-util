@@ -48,7 +48,7 @@ function extrairBeneficiario(texto: string) {
           regexEmpresa.test(upper) &&
           !blacklist.some(b => upper.includes(b))
         ) {
-          console.log("ACHOU NA JANELA:", candidata);
+          //console.log("ACHOU NA JANELA:", candidata);
           return limparNome(candidata);
         }
       }
@@ -69,7 +69,7 @@ function extrairBeneficiario(texto: string) {
 
   let melhor = candidatos.sort((a, b) => scoreLinha(b) - scoreLinha(a))[0];
 
-  console.log("ACHOU NO FALLBACK:", melhor);
+  //console.log("ACHOU NO FALLBACK:", melhor);
 
   return limparNome(melhor);
 }
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
     );
 
     if (!linhaMatch) {
-        console.log("Linha nao capturada");
+        //console.log("Linha nao capturada");
         return NextResponse.json(
           { erro: "Linha digitável não capturada" },
           { status: 400 }
@@ -179,17 +179,17 @@ export async function POST(req: NextRequest) {
     }
 
     const linhaDigitavel = linhaMatch[0].replace(/\D/g, "");
-    console.log("Linha:", linhaDigitavel);
+    //console.log("Linha:", linhaDigitavel);
 
     // 💰 parse
     const resultado = parseBoleto(linhaDigitavel);
 
-    console.log("Valor:", resultado.valor);
-    console.log("Vencimento:", resultado.vencimento);
+    //console.log("Valor:", resultado.valor);
+    //console.log("Vencimento:", resultado.vencimento);
 
     // 👤 beneficiário (melhorado)
     let beneficiario = extrairBeneficiario(texto);
-    console.log("Beneficiário:", beneficiario);
+    //console.log("Beneficiário:", beneficiario);
 
     // 📅 formatar data
     const vencimentoFormatado = resultado.vencimento
@@ -199,12 +199,12 @@ export async function POST(req: NextRequest) {
     const numeroDocumento = extrairNumeroDocumento(texto);
     let dataDocumento = extrairDataDocumento(texto);
 
-    console.log("NF:", numeroDocumento);
+    //console.log("NF:", numeroDocumento);
 
     if (dataDocumento.includes(".")) {
       dataDocumento = dataDocumento.replaceAll(".","/");
     }
-    console.log("Data Documento:", dataDocumento);
+    //console.log("Data Documento:", dataDocumento);
     
 
     //return NextResponse.json({ texto });
