@@ -31,7 +31,7 @@ export default function Dashboard() {
       const novaImagem = `data:image/jpeg;base64,${data.imagem}`;
 
       // 🔥 só atualiza se mudou (evita reset desnecessário)
-      if (!dados && novaImagem !== imagem) {
+      if (novaImagem !== imagem) {
         setImagem(novaImagem);
       }
     }
@@ -124,7 +124,7 @@ async function inserirNaPlanilha() {
   if (!dados) return;
 
   if (!dados.tipo) {
-    alert("Selecione o tipo");
+    setMensagem("Selecione o tipo do boleto");
     return;
   }
 
@@ -272,79 +272,48 @@ function extrairNumeroDocumento(texto: string) {
 
 
   async function extrairBoleto() {
-    if (!imagem) return;
+  if (!imagem) return;
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-        // 🚀 chama sua API com Google Vision
-        const res = await fetch("/api/ocr", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            imagem: imagem.split(",")[1], // remove prefixo base64
-        }),
-        });
+  try {
+    const res = await fetch("/api/ocr", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        imagem: imagem.split(",")[1],
+      }),
+    });
 
-        const data = await res.json();
-        const texto = data.texto;
+    const data = await res.json();
 
-        console.log(texto);
+    console.log("RETORNO OCR:", data);
 
-        // 🔢 linha digitável
-        const linhaMatch = texto.match(
-        /\d{5}\.\d{5}\s\d{5}\.\d{6}\s\d{5}\.\d{6}\s\d\s\d{14}/
-        );
-
-        if (!linhaMatch) {
-            setLoading(false);
-            console.log("Linha nao capturada");
-            setMensagem("Erro ao ler o boleto, tente novamente com outra foto");
-            return;
-        }
-
-        const linhaDigitavel = linhaMatch[0].replace(/\D/g, "");
-        console.log("Linha:", linhaDigitavel);
-
-        // 💰 parse
-        const resultado = parseBoleto(linhaDigitavel);
-
-        console.log("Valor:", resultado.valor);
-        console.log("Vencimento:", resultado.vencimento);
-
-        // 👤 beneficiário (melhorado)
-        let beneficiario = extrairBeneficiario(texto);
-        console.log("Beneficiário:", beneficiario);
-
-        // 📅 formatar data
-        const vencimentoFormatado = resultado.vencimento
-        ? resultado.vencimento.split("-").reverse().join("/")
-        : "";
-
-        const numeroDocumento = extrairNumeroDocumento(texto);
-        const dataDocumento = extrairDataDocumento(texto);
-
-        console.log("NF:", numeroDocumento);
-        console.log("Data Documento:", dataDocumento);
-
-        // ✅ set dados
-        setDados({
-            beneficiario,
-            valor: resultado.valor,
-            vencimento: vencimentoFormatado,
-            tipo: "",
-            numeroDocumento,
-            dataDocumento,
-        });
-
-    } catch (err) {
-        console.error("Erro ao extrair boleto", err);
-    } finally {
-        setLoading(false);
+    // 🚨 validação básica
+    if (!data || !data.valor) {
+      setMensagem("Erro ao ler o boleto, tente outra imagem");
+      return;
     }
+
+    // ✅ AGORA SIM — usa direto da API
+    setDados({
+      beneficiario: data.beneficiario || "",
+      valor: data.valor || 0,
+      vencimento: data.vencimento || "",
+      tipo: "",
+      numeroDocumento: data.numeroDocumento || "",
+      dataDocumento: data.dataDocumento || "",
+    });
+
+  } catch (err) {
+    console.error("Erro ao extrair boleto", err);
+    setMensagem("Erro ao processar OCR");
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     const interval = setInterval(carregarImagem, 2000);
@@ -369,8 +338,9 @@ function extrairNumeroDocumento(texto: string) {
 
       <button
         onClick={extrairBoleto}
-        className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
-        >
+        disabled={loading}
+        className="mt-4 bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+      >
         {loading ? "Extraindo..." : "Extrair boleto"}
       </button>
 
