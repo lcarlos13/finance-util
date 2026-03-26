@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import vision from "@google-cloud/vision";
+import fs from "fs";
+import path from "path";
 
 const client = new vision.ImageAnnotatorClient({
   credentials: JSON.parse(
@@ -9,10 +11,17 @@ const client = new vision.ImageAnnotatorClient({
 
 export async function POST(req: NextRequest) {
   try {
-    const { imagem } = await req.json();
+    //const { imagem } = await req.json();
+    const filePath = path.join(process.cwd(), "tmp", "imagem.jpg");
+
+    if (!fs.existsSync(filePath)) {
+      return Response.json({ erro: "Imagem não encontrada" }, { status: 404 });
+    }
+
+    const buffer = fs.readFileSync(filePath);
 
     const [result] = await client.textDetection({
-      image: { content: imagem },
+      image: { content: buffer },
     });
 
     const texto = result.fullTextAnnotation?.text || "";
