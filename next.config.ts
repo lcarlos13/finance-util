@@ -14,7 +14,7 @@ const withPWA = require("next-pwa")({
 module.exports = withPWA({
   reactStrictMode: true,
   turbopack: {}, // <- isso silencia o erro
-  allowedDevOrigins: ["192.168.0.4"],
+  allowedDevOrigins: ["192.168.0.8"],
 });
 
 export default nextConfig;

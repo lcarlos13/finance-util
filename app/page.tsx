@@ -127,8 +127,13 @@ async function inserirNaPlanilha() {
     return;
   }
 
+  let api_sheets = "/api/sheets";
+  if (!["SECOS", "PROTEÍNAS", "BEBIDAS"].includes(dados.tipo)){
+      api_sheets = "/api/sheets/generalreport";
+  }
+
   try {
-    const res = await fetch("/api/sheets", {
+    const res = await fetch(api_sheets, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -152,6 +157,8 @@ async function inserirNaPlanilha() {
     setMensagem("Erro ao inserir na planilha");
   }
 }
+
+
 
 function normalizarTexto(texto: string) {
   return texto
@@ -451,7 +458,15 @@ function extrairNumeroDocumento(texto: string) {
             <option value="SECOS">SECOS</option>
             <option value="PROTEÍNAS">PROTEÍNAS</option>
             <option value="BEBIDAS">BEBIDAS</option>
-           </select>
+            <option value="FOLHA DE PAGAMENTO">FOLHA DE PAGAMENTO / VALES / RESCISÕES / FÉRIAS</option>
+            <option value="ENCARGOS SOCIAIS">ENCARGOS SOCIAIS / V. TRANSPORTE / CESTA BÁSICA</option>
+            <option value="HONORÁRIOS">HONORÁRIOS / ASSESSORIA JURÍDICA</option>
+            <option value="MANUTENÇÃO">MANUTENÇÃO / MATERIAL / MÃO DE OBRA</option>
+            <option value="DESPESAS FIXAS">DESPESAS FIXAS</option>
+            <option value="MATERIAL DE LIMPEZA">MATERIAL DE LIMPEZA / CONSERVAÇÃO</option>
+            <option value="ALUGUÉIS">ALUGUÉIS / CONDOMÍNIO / IMPOSTOS / TAXAS</option>
+            <option value="DESPESAS DIVERSAS">DESPESAS DIVERSAS</option>
+          </select>
 
            <button
                 onClick={inserirNaPlanilha}
