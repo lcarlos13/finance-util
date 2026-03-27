@@ -458,13 +458,12 @@ function extrairNumeroDocumento(texto: string) {
             <option value="SECOS">SECOS</option>
             <option value="PROTEÍNAS">PROTEÍNAS</option>
             <option value="BEBIDAS">BEBIDAS</option>
-            <option value="FOLHA DE PAGAMENTO">FOLHA DE PAGAMENTO / VALES / RESCISÕES / FÉRIAS</option>
-            <option value="ENCARGOS SOCIAIS">ENCARGOS SOCIAIS / V. TRANSPORTE / CESTA BÁSICA</option>
-            <option value="HONORÁRIOS">HONORÁRIOS / ASSESSORIA JURÍDICA</option>
-            <option value="MANUTENÇÃO">MANUTENÇÃO / MATERIAL / MÃO DE OBRA</option>
+            <option value="ENCARGOS SOCIAIS">ENCARGOS SOCIAIS</option>
+            <option value="HONORÁRIOS">HONORÁRIOS</option>
+            <option value="MANUTENÇÃO">MANUTENÇÃO</option>
             <option value="DESPESAS FIXAS">DESPESAS FIXAS</option>
-            <option value="MATERIAL DE LIMPEZA">MATERIAL DE LIMPEZA / CONSERVAÇÃO</option>
-            <option value="ALUGUÉIS">ALUGUÉIS / CONDOMÍNIO / IMPOSTOS / TAXAS</option>
+            <option value="MATERIAL DE LIMPEZA">MATERIAL DE LIMPEZA</option>
+            <option value="ALUGUÉIS">ALUGUÉIS</option>
             <option value="DESPESAS DIVERSAS">DESPESAS DIVERSAS</option>
           </select>
 

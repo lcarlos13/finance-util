@@ -86,7 +86,7 @@ export async function POST(req: Request) {
         valueInputOption: "USER_ENTERED",
         requestBody: {
             values: [[
-            "",
+            vencimento,
             beneficiario,
             valor,
             ""
