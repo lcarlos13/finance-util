@@ -21,9 +21,6 @@ export async function POST(req: Request) {
       requestBody: {
         values: [[
           beneficiario,
-          "",
-          "",
-          "",
           numeroDocumento,
           valor,
           dataDocumento,
