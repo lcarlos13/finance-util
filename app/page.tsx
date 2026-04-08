@@ -409,6 +409,9 @@ function extrairNumeroDocumento(texto: string) {
 
       {dados && (
         <div className="mt-4 space-y-2">
+          <label className="block text-sm font-medium mb-1">
+            Beneficiário/Empresa
+          </label>
           <input
             value={dados.beneficiario}
             onChange={(e) =>
@@ -417,6 +420,10 @@ function extrairNumeroDocumento(texto: string) {
             className="border p-2 w-full"
           />
 
+
+          <label className="block text-sm font-medium mb-1">
+            Valor
+          </label>
           <input
             value={dados.valor}
             onChange={(e) =>
@@ -425,6 +432,10 @@ function extrairNumeroDocumento(texto: string) {
             className="border p-2 w-full"
           />
 
+
+          <label className="block text-sm font-medium mb-1">
+            Vencimento
+          </label>
           <input
             value={dados.vencimento || ""}
             onChange={(e) =>
@@ -432,6 +443,10 @@ function extrairNumeroDocumento(texto: string) {
             }
             className="border p-2 w-full"
           />
+
+          <label className="block text-sm font-medium mb-1">
+            NF
+          </label>
           <input
             value={dados.numeroDocumento}
             onChange={(e) =>
@@ -440,6 +455,9 @@ function extrairNumeroDocumento(texto: string) {
             className="border p-2 w-full"
             />
 
+          <label className="block text-sm font-medium mb-1">
+            Data de entrega
+          </label>
           <input
             value={dados.dataDocumento}
             onChange={(e) =>
@@ -447,6 +465,10 @@ function extrairNumeroDocumento(texto: string) {
             }
             className="border p-2 w-full"
           />
+
+          <label className="block text-sm font-medium mb-1">
+            Tipo do Boleto
+          </label>
           <select
             value={dados.tipo}
             onChange={(e) =>
