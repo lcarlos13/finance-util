@@ -8,7 +8,9 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
+  TouchSensor,
 } from "@dnd-kit/core";
+
 
 type Dia = {
   data: string;
@@ -44,7 +46,9 @@ export default function AjustePage() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
-    })
+    }),
+    useSensor(TouchSensor, { 
+      activationConstraint: { delay: 150, tolerance: 5 } })
   );
 
   useEffect(() => {
