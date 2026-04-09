@@ -11,28 +11,11 @@ import {
   TouchSensor,
 } from "@dnd-kit/core";
 
+type Dia = { data: string; horarios: string[] };
+type GridState = { [key: string]: string };
+type OrigemState = { [key: string]: "ocr" | "manual" };
 
-type Dia = {
-  data: string;
-  horarios: string[];
-};
-
-type GridState = {
-  [key: string]: string;
-};
-
-type OrigemState = {
-  [key: string]: "ocr" | "manual";
-};
-
-const CAMPOS = [
-  "entrada",
-  "inicio_almoco",
-  "saida_almoco",
-  "intervalo",
-  "retorno",
-  "saida",
-];
+const CAMPOS = ["entrada","inicio_almoco","saida_almoco","intervalo","retorno","saida"];
 
 export default function AjustePage() {
   const [funcionario, setFuncionario] = useState("");
@@ -44,23 +27,17 @@ export default function AjustePage() {
   const [mensagem, setMensagem] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    }),
-    useSensor(TouchSensor, { 
-      activationConstraint: { delay: 150, tolerance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
   );
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const stored = localStorage.getItem("pontoOCR");
     if (!stored) return;
 
     const parsed = JSON.parse(stored);
-
     setFuncionario(parsed.funcionario);
     setDias(parsed.dias);
 
@@ -71,16 +48,12 @@ export default function AjustePage() {
     parsed.dias.forEach((dia: Dia) => {
       dia.horarios.forEach((h, i) => {
         const campo = CAMPOS[i];
-
         if (campo) {
           const key = `${dia.data}-${campo}`;
           initialGrid[key] = h;
           origemMap[key] = "ocr";
         } else {
-          horariosPool.push({
-            id: `${h}-${Math.random()}`,
-            label: h,
-          });
+          horariosPool.push({ id: `${h}-${Math.random()}`, label: h });
         }
       });
     });
@@ -90,64 +63,55 @@ export default function AjustePage() {
     setPool(horariosPool);
   }, []);
 
-
-async function salvarPlanilha() {
-  try {
-    const res = await fetch("/api/sheets_folha_extra", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        funcionario,
-        dias,
-        grid,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (data.ok) {
-      setMensagem("Salvo com sucesso!");
-
-      // redireciona depois do toast desaparecer (2s de animação + 0.3s de slide)
-      setTimeout(() => {
-        window.location.href = "/folhafuncextra";
-      }, 2300); 
-
-    } else {
-      setMensagem("Erro ao salvar");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao salvar");
+  function formatHoraInput(value: string) {
+    // Remove tudo que não é número
+    let v = value.replace(/[^\d]/g,"");
+    if (v.length === 0) return "";
+    if (v.length <= 2) return v;        // só horas
+    return v.slice(0,2) + ":" + v.slice(2,4); // HH:MM
   }
-}
-
 
   function handleDragEnd(event: any) {
     const { active, over } = event;
     if (!over) return;
-
+    const value = active.data.current?.label;
     const sourceId = active.data.current?.sourceId;
     const targetId = over.id;
-    const value = active.data.current?.label;
+    if (!value) return;
 
-    setGrid((prev) => {
+    setGrid(prev => {
       const newGrid = { ...prev };
-
-      if (sourceId) newGrid[sourceId] = "";
+      if (sourceId && sourceId in newGrid) newGrid[sourceId] = "";
       newGrid[targetId] = value;
-
       return newGrid;
     });
 
-    // 🔥 destino vira OCR (arrastável)
-    setOrigem((prev) => ({
+    setOrigem(prev => ({
       ...prev,
       [targetId]: "ocr",
       ...(sourceId ? { [sourceId]: "manual" } : {}),
     }));
+
+    // Remove do pool se estiver vindo do pool
+    setPool(prev => prev.filter(item => item.id !== sourceId));
+  }
+
+  async function salvarPlanilha() {
+    try {
+      const res = await fetch("/api/sheets_folha_extra", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ funcionario, dias, grid }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMensagem("Salvo com sucesso!");
+        setTimeout(() => (window.location.href="/folhafuncextra"),2000);
+      } else setMensagem("Erro ao salvar");
+    } catch (err) {
+      console.error(err);
+      setMensagem("Erro ao salvar");
+    }
   }
 
   if (!mounted) return null;
@@ -156,19 +120,17 @@ async function salvarPlanilha() {
     <main className="p-6 space-y-6 bg-gray-50 min-h-screen text-gray-800">
       <input
         value={funcionario}
-        onChange={(e) => setFuncionario(e.target.value)}
+        onChange={(e)=>setFuncionario(e.target.value)}
         className="text-xl font-bold border-b outline-none bg-transparent"
       />
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         {/* Pool */}
         <div className="flex items-center gap-4 flex-wrap">
-          {pool.map((item) => (
-            <DraggableItem key={item.id} id={item.id} label={item.label} />
+          {pool.map(item => (
+            <DraggableValue key={item.id} id={item.id} label={item.label} sourceId={item.id} />
           ))}
-
-          <DraggableItem id="folga" label="FOLGA" />
-
+          <DraggableValue id="folga" label="FOLGA" sourceId="folga" />
           <span className="text-sm text-gray-600">
             Arraste os campos destacados para a posição desejada
           </span>
@@ -186,29 +148,20 @@ async function salvarPlanilha() {
             <div className="p-2">Saída</div>
           </div>
 
-          {dias.map((dia) => (
+          {dias.map(dia => (
             <div key={dia.data} className="grid grid-cols-7 border-t bg-white">
               <div className="p-2">{dia.data}</div>
-
-              {CAMPOS.map((campo) => {
+              {CAMPOS.map(campo => {
                 const id = `${dia.data}-${campo}`;
-
                 return (
                   <DroppableInput
                     key={id}
                     id={id}
                     value={grid[id] || ""}
-                    isOCR={origem[id] === "ocr"}
-                    onChange={(val) => {
-                      setGrid((prev) => ({
-                        ...prev,
-                        [id]: val,
-                      }));
-
-                      setOrigem((prev) => ({
-                        ...prev,
-                        [id]: "manual",
-                      }));
+                    isOCR={origem[id]==="ocr"}
+                    onChange={v => {
+                      setGrid(prev => ({ ...prev, [id]: v }));
+                      setOrigem(prev => ({ ...prev, [id]: "manual" }));
                     }}
                   />
                 );
@@ -217,123 +170,79 @@ async function salvarPlanilha() {
           ))}
         </div>
       </DndContext>
+
       <button
         onClick={salvarPlanilha}
         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl transition w-48 text-center"
-        >
+      >
         Salvar na Planilha
-       </button>
-      {/* MENSAGEM */}
-        {mensagem && (
-        <div
-            className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg animate-slide-in animate-fade-out"
-        >
-            {mensagem}
+      </button>
+
+      {mensagem && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg">
+          {mensagem}
         </div>
-       )}
+      )}
     </main>
   );
 }
 
-function DraggableItem({
+// DraggableValue separado apenas para valores OCR/Pool
+function DraggableValue({
   id,
   label,
-}: {
-  id: string;
-  label: string;
-}) {
+  sourceId
+}: { id:string, label:string, sourceId:string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
-    data: { label },
+    data:{ label, sourceId }
   });
 
   const style = transform
-    ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
+    ? { transform:`translate(${transform.x}px,${transform.y}px)`, zIndex:999, position:"relative" as const }
     : undefined;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
       {...attributes}
-      className="cursor-grab border-2 border-blue-500 bg-blue-100 px-3 py-1 rounded"
+      className="flex items-center border-2 border-blue-500 bg-blue-100 rounded mb-1 select-none touch-none min-w-0"
     >
-      {label}
+      {/* Pegador menor */}
+      <div {...listeners} className="cursor-grab px-2 py-1 bg-blue-200 rounded-l text-sm">☰</div>
+
+      {/* Input / Label */}
+      <div className="flex-1 text-center px-1 py-1 overflow-hidden truncate">{label}</div>
     </div>
   );
 }
 
-function DraggableCell({
-  id,
-  label,
-  sourceId,
-}: {
-  id: string;
-  label: string;
-  sourceId: string;
-}) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id,
-    data: { label, sourceId },
-  });
-
-  const style = transform
-    ? {
-        transform: `translate(${transform.x}px, ${transform.y}px)`,
-        zIndex: 999,
-        position: "relative" as const,
-      }
-    : undefined;
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="border-2 border-blue-500 rounded bg-white"
-    >
-      <div
-        {...listeners}
-        {...attributes}
-        className="cursor-grab text-center px-2 py-1 select-none"
-      >
-        {label}
-      </div>
-    </div>
-  );
-}
-
+// DroppableInput separa input de draggables
 function DroppableInput({
-  id,
-  value,
-  isOCR,
-  onChange,
-}: {
-  id: string;
-  value: string;
-  isOCR: boolean;
-  onChange: (v: string) => void;
-}) {
+  id, value, isOCR, onChange
+}: { id:string, value:string, isOCR:boolean, onChange:(v:string)=>void }) {
   const { setNodeRef } = useDroppable({ id });
 
-  function formatHora(v: string) {
-    v = v.replace(/\D/g, "").slice(0, 4);
-    if (v.length >= 3) return v.slice(0, 2) + ":" + v.slice(2);
-    return v;
-  }
-
   return (
-    <div ref={setNodeRef} className="p-1">
+    <div ref={setNodeRef} className="p-1 min-w-[60px]">
       {value && isOCR ? (
-        <DraggableCell id={`${id}-${value}`} label={value} sourceId={id} />
+        <DraggableValue id={`${id}-${value}`} label={value} sourceId={id} />
       ) : (
         <input
           value={value}
-          onChange={(e) => onChange(formatHora(e.target.value))}
+          onChange={e=>onChange(formatHoraInput(e.target.value))}
           placeholder="00:00"
-          className="w-full text-center border rounded"
+          className="w-full text-center border rounded px-2 py-1 box-border"
         />
       )}
     </div>
   );
+}
+
+function formatHoraInput(value: string) {
+  let v = value.replace(/[^\d]/g,"");
+  if (v.length === 0) return "";
+  if (v.length <= 2) return v;
+  return v.slice(0,2) + ":" + v.slice(2,4);
 }
